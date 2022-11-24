@@ -1,8 +1,8 @@
-use std::time::Duration;
-
 use crate::player::PlayerPlugin;
+use animation::CustomAnimationPlugin;
 use bevy::{asset::LoadState, prelude::*};
 
+mod animation;
 mod player;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -17,11 +17,12 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_system(bevy::window::close_on_esc)
         .add_plugin(PlayerPlugin)
+        .add_plugin(CustomAnimationPlugin)
         .add_state(AppState::Setup)
         .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(load_textures))
         .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures))
         .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup))
-        .add_system(animate_sprite)
+        // .add_system(animate_sprite)
         .add_system(auto_move)
         .run();
 }
