@@ -10,7 +10,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_update(AppState::Setup).with_system(player_setup))
             .add_system(shoot)
-            .add_system(flip);
+            .add_system(player_movement);
     }
 }
 
@@ -22,9 +22,8 @@ fn player_setup(
     let texture_handle = asset_server.load("textures/rpg/chars/player/player.png");
     let texture_atlas =
         TextureAtlas::from_grid(texture_handle, Vec2::new(32.0, 32.0), 6, 5, None, None);
-
-    // let test = texture_atlas.textures.split_off(2);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
     commands.spawn((
         Player,
         SpriteSheetBundle {
@@ -33,10 +32,14 @@ fn player_setup(
                 scale: Vec3::splat(3.0),
                 ..default()
             },
+            sprite: TextureAtlasSprite {
+                index: 0,
+                ..default()
+            },
             texture_atlas: texture_atlas_handle,
             ..default()
         },
-        AnimationTimer(Timer::from_seconds(0.16, TimerMode::Repeating)),
+        // AnimationTimer(Timer:d:from_seconds(0.16, TimerMode::Repeating)),
     ));
 }
 
@@ -68,10 +71,21 @@ fn shoot(
     }
 }
 
-fn flip(mut query: Query<&mut TextureAtlasSprite, With<Player>>, buttons: Res<Input<KeyCode>>) {
-    if buttons.just_pressed(KeyCode::F) {
-        for mut sprite in &mut query {
-            sprite.flip_x = !sprite.flip_x;
+fn player_movement(
+    mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Player>>,
+    buttons: Res<Input<KeyCode>>,
+) {
+    if buttons.pressed(KeyCode::D) {
+        for (mut transform, mut sprite) in &mut query {
+            sprite.flip_x = false;
+            transform.translation.x += 10.;
+        }
+    }
+
+    if buttons.pressed(KeyCode::A) {
+        for (mut transform, mut sprite) in &mut query {
+            sprite.flip_x = true;
+            transform.translation.x -= 10.;
         }
     }
 }
