@@ -1,5 +1,6 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
+use crate::animation::Animate;
 use crate::{AnimationTimer, AppState, Speed};
 pub struct PlayerPlugin;
 
@@ -26,6 +27,8 @@ fn player_setup(
 
     commands.spawn((
         Player,
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Animate(0, 0),
         SpriteSheetBundle {
             transform: Transform {
                 translation: Vec3::new(-100.0, 0.0, 0.0),
@@ -39,7 +42,6 @@ fn player_setup(
             texture_atlas: texture_atlas_handle,
             ..default()
         },
-        // AnimationTimer(Timer:d:from_seconds(0.16, TimerMode::Repeating)),
     ));
 }
 
@@ -72,20 +74,25 @@ fn shoot(
 }
 
 fn player_movement(
-    mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Player>>,
+    mut query: Query<(&mut Transform, &mut TextureAtlasSprite, &mut Animate), With<Player>>,
     buttons: Res<Input<KeyCode>>,
+    time: Res<Time>,
 ) {
     if buttons.pressed(KeyCode::D) {
-        for (mut transform, mut sprite) in &mut query {
+        for (mut transform, mut sprite, mut animate) in &mut query {
             sprite.flip_x = false;
-            transform.translation.x += 10.;
+            transform.translation.x += 200.0 * time.delta_seconds();
+            animate.0 = 1;
+            animate.1 = 5;
         }
     }
 
     if buttons.pressed(KeyCode::A) {
-        for (mut transform, mut sprite) in &mut query {
+        for (mut transform, mut sprite, mut animate) in &mut query {
             sprite.flip_x = true;
-            transform.translation.x -= 10.;
+            transform.translation.x -= 200.0 * time.delta_seconds();
+            animate.0 = 1;
+            animate.1 = 5;
         }
     }
 }
