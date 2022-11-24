@@ -55,7 +55,7 @@ fn shoot(
             let direction = if sprite.flip_x { -1. } else { 1. };
             let bullet_x = transform.translation.x + (50.0 * direction);
             commands.spawn((
-                Speed(20.0),
+                Speed(500.0),
                 MaterialMesh2dBundle {
                     mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
                     transform: Transform {

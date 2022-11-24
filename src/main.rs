@@ -96,7 +96,7 @@ fn setup(
     commands.spawn(Camera2dBundle::default());
 
     commands.spawn((
-        Speed(-0.2),
+        Speed(-10.),
         SpriteSheetBundle {
             transform: Transform {
                 translation: Vec3::new(150.0, 0.0, 0.0),
@@ -119,13 +119,8 @@ fn setup(
 #[derive(Component)]
 struct Speed(f32);
 
-fn auto_move(mut query: Query<(&mut Transform, &Speed)>) {
-    let mut timer = Timer::from_seconds(1.0, TimerMode::Repeating);
-
+fn auto_move(mut query: Query<(&mut Transform, &Speed)>, time: Res<Time>) {
     for (mut transform, speed) in &mut query {
-        timer.tick(Duration::from_secs_f32(1.0));
-        if timer.just_finished() {
-            transform.translation.x += speed.0;
-        }
+        transform.translation.x += speed.0 * time.delta_seconds();
     }
 }
