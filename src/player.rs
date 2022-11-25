@@ -1,7 +1,7 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::animation::Animate;
-use crate::{AnimationTimer, AppState, Speed};
+use crate::{AnimationTimer, AppState, CombatStats, Speed};
 pub struct PlayerPlugin;
 
 #[derive(Component)]
@@ -42,6 +42,7 @@ fn player_setup(
             texture_atlas: texture_atlas_handle,
             ..default()
         },
+        Name::new("Player"),
     ));
 }
 
@@ -67,6 +68,10 @@ fn shoot(
                     },
                     material: materials.add(ColorMaterial::from(Color::PURPLE)),
                     ..default()
+                },
+                CombatStats {
+                    health: 1,
+                    damage: 50,
                 },
             ));
         }

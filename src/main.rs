@@ -1,8 +1,11 @@
 use crate::player::PlayerPlugin;
 use animation::{Animate, CustomAnimationPlugin};
-use bevy::{asset::LoadState, prelude::*};
+use bevy::{asset::LoadState, prelude::*, sprite::collide_aabb::collide};
+use bevy_inspector_egui::Inspectable;
+use inspector::CustomInspectorPlugin;
 
 mod animation;
+mod inspector;
 mod player;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -11,10 +14,20 @@ enum AppState {
     Finished,
 }
 
+#[derive(Component)]
+pub struct Enemy;
+
+#[derive(Component, Inspectable)]
+pub struct CombatStats {
+    health: isize,
+    damage: isize,
+}
+
 fn main() {
     App::new()
         .init_resource::<RpgSpriteHandles>()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugin(CustomInspectorPlugin)
         .add_system(bevy::window::close_on_esc)
         .add_plugin(PlayerPlugin)
         .add_plugin(CustomAnimationPlugin)
@@ -22,8 +35,9 @@ fn main() {
         .add_system_set(SystemSet::on_enter(AppState::Setup).with_system(load_textures))
         .add_system_set(SystemSet::on_update(AppState::Setup).with_system(check_textures))
         .add_system_set(SystemSet::on_enter(AppState::Finished).with_system(setup))
-        // .add_system(animate_sprite)
+        .add_system(collision_detection)
         .add_system(auto_move)
+        .add_system(destroy_zombie)
         .run();
 }
 
@@ -52,24 +66,6 @@ fn check_textures(
 
 #[derive(Component, Deref, DerefMut)]
 struct AnimationTimer(Timer);
-
-fn animate_sprite(
-    time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-        &Handle<TextureAtlas>,
-    )>,
-) {
-    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
-        timer.tick(time.delta());
-        if timer.just_finished() {
-            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
-            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
-        }
-    }
-}
 
 fn setup(
     mut commands: Commands,
@@ -115,6 +111,11 @@ fn setup(
         },
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         Animate(0, 5),
+        Enemy,
+        CombatStats {
+            health: 100,
+            damage: 1,
+        },
     ));
 }
 
@@ -124,5 +125,35 @@ struct Speed(f32);
 fn auto_move(mut query: Query<(&mut Transform, &Speed)>, time: Res<Time>) {
     for (mut transform, speed) in &mut query {
         transform.translation.x += speed.0 * time.delta_seconds();
+    }
+}
+
+fn collision_detection(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform, &CombatStats), Without<Enemy>>,
+    mut target: Query<(&Transform, &mut CombatStats), With<Enemy>>,
+) {
+    for (ent, transform, combat_stats) in &query {
+        for (target_transform, mut target_combat_stats) in &mut target {
+            let collision = collide(
+                transform.translation,
+                Vec2::splat(5.0),
+                target_transform.translation,
+                Vec2::splat(32.0),
+            );
+            if collision.is_some() {
+                info!("hit hit hit hit");
+                commands.entity(ent).despawn();
+                target_combat_stats.health -= combat_stats.damage;
+            }
+        }
+    }
+}
+
+fn destroy_zombie(mut commands: Commands, zombie: Query<(Entity, &CombatStats), With<Enemy>>) {
+    for (entity, combat_stats) in &zombie {
+        if combat_stats.health <= 0 {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
