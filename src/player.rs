@@ -9,7 +9,7 @@ struct Player;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_update(AppState::Setup).with_system(player_setup))
+        app.add_system_set(SystemSet::on_enter(AppState::Setup).with_system(player_setup))
             .add_system(shoot)
             .add_system(player_movement);
     }
