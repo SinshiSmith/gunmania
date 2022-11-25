@@ -1,5 +1,5 @@
 use crate::player::PlayerPlugin;
-use animation::CustomAnimationPlugin;
+use animation::{Animate, CustomAnimationPlugin};
 use bevy::{asset::LoadState, prelude::*};
 
 mod animation;
@@ -90,7 +90,7 @@ fn setup(
     }
 
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
-    let zombie_handle = asset_server.get_handle("textures/rpg/chars/zombie/Idle1.png");
+    let zombie_handle = asset_server.get_handle("textures/rpg/chars/zombie/Walk1.png");
     let zombie_index = texture_atlas.get_texture_index(&zombie_handle).unwrap();
     let atlas_handle = texture_atlases.add(texture_atlas);
 
@@ -113,7 +113,8 @@ fn setup(
 
             ..default()
         },
-        AnimationTimer(Timer::from_seconds(0.16, TimerMode::Repeating)),
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Animate(0, 5),
     ));
 }
 
